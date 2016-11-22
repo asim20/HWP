@@ -1,6 +1,8 @@
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Stack;
 
@@ -32,12 +34,14 @@ public class HWP {
 		int CMD;
 		int wert;
 		programmCounter=0;
-		int summe=0;
+		long timeBefore;
+		long timeAfter;
+		Profiler profiler=new Profiler(10000);
 		
 		do{
-			
+			timeBefore=System.currentTimeMillis();
 			opcode=memory[programmCounter];
-			System.out.println("opcode "+opcode+" mem "+memory[programmCounter]);
+			//System.out.println("opcode "+opcode+" mem "+memory[programmCounter]);
 			indexRx=(opcode>>4)&15;
 			indexRy=(opcode>>8)&15;
 			CMD = opcode&15;
@@ -76,7 +80,6 @@ public class HWP {
 			case "ADD":  System.out.println("Add wird ausgeführt");
 						 register[indexRx]=register[indexRx]+register[indexRy];
 						 System.out.println(register[indexRx]);
-						 summe+=register[indexRx];
 						 programmCounter++;
 						 break;
 			case "SUB":  System.out.println("SUB wird ausgeführt");
@@ -133,17 +136,20 @@ public class HWP {
 							 registerAusgabe();
 							 System.out.println("Summe: "+register[10]);
 							 memoryAusgabe();
+							 //writeFile(profiler);
 							System.exit(0);
 						 }
 						 break;
 						 
 						 
 			}
-			
+			timeAfter=System.currentTimeMillis();
+			if(CMD!=0){
+				profiler.setValue((timeAfter-timeBefore), (programmCounter-1));
+			}
 //			try {
 //				Thread.sleep(1000);
 //			} catch (InterruptedException e) {
-//				// TODO Auto-generated catch block
 //				e.printStackTrace();
 //			}
 			System.out.println("Counter: "+programmCounter);
@@ -152,6 +158,24 @@ public class HWP {
 		
 	}
 	
+	private static void writeFile(Profiler profiler) {
+		
+		 FileWriter fw=null;
+		try {
+			fw = new FileWriter("Profile.txt");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		 BufferedWriter bw = new BufferedWriter(fw);
+		 
+		 try {
+			fw.write("Used Time:"+profiler.getValue(0));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+	}
+
 	private static void registerAusgabe() {
 		
 		for (int i = 0; i < register.length; i++) {
